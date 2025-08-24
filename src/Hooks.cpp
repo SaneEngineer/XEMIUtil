@@ -7,33 +7,37 @@ namespace MPL::Hooks
         static inline void thunk(Target* a_ref)
         {
             func(a_ref);
-            if (auto ref = a_ref->GetObjectReference(); ref->Is(RE::FormType::MovableStatic) || ref->Is(RE::FormType::Static))
+            if (a_ref != nullptr)
             {
-                auto* std = MPL::Config::StatData::GetSingleton();
-                std->LoadConfig();
-                auto itm = std::find_if(std->entries.begin(), std->entries.end(), [&](auto ent) {
-                    return ent.forms.contains(a_ref->GetFormID());
-                });
-                if (itm != std->entries.end() && itm->xemi != 0x0)
+                auto ref = a_ref->GetObjectReference();
+                if (ref != nullptr && (ref->Is(RE::FormType::MovableStatic) || ref->Is(RE::FormType::Static)))
                 {
-                    if (a_ref->extraList.HasType<RE::ExtraEmittanceSource>())
+                    auto* std = MPL::Config::StatData::GetSingleton();
+                    std->LoadConfig();
+                    auto itm = std::find_if(std->entries.begin(), std->entries.end(), [&](auto ent) {
+                        return ent.forms.contains(a_ref->GetFormID());
+                    });
+                    if (itm != std->entries.end() && itm->xemi != 0x0)
                     {
-                        auto* edr = a_ref->extraList.GetByType<RE::ExtraEmittanceSource>();
+                        if (a_ref->extraList.HasType<RE::ExtraEmittanceSource>())
+                        {
+                            auto* edr = a_ref->extraList.GetByType<RE::ExtraEmittanceSource>();
+                            auto* frm = RE::TESForm::LookupByID(itm->xemi);
 #ifdef DEBUG
-                        auto* frm = RE::TESForm::LookupByID(itm->xemi);
-                        logger::info("(INIT)(REP): {:X}:{} -> {:X}:{} W/ {:X}:{}", a_ref->GetLocalFormID(), a_ref->sourceFiles.array->front()->GetFilename(), edr->source->GetLocalFormID(), edr->source->sourceFiles.array->front()->GetFilename(), frm->GetLocalFormID(), frm->sourceFiles.array->front()->GetFilename());
+                            logger::info("(INIT)(REP): {:X}:{} -> {:X}:{} W/ {:X}:{}", a_ref->GetLocalFormID(), a_ref->sourceFiles.array->front()->GetFilename(), edr->source->GetLocalFormID(), edr->source->sourceFiles.array->front()->GetFilename(), frm->GetLocalFormID(), frm->sourceFiles.array->front()->GetFilename());
 #endif
-                        edr->source = frm;
-                    }
-                    else
-                    {
-                        auto* frm = RE::TESForm::LookupByID(itm->xemi);
+                            edr->source = frm;
+                        }
+                        else
+                        {
+                            auto* frm = RE::TESForm::LookupByID(itm->xemi);
 #ifdef DEBUG
-                        logger::info("(INIT)(CRE): {:X}:{} -> {:X}:{}", a_ref->GetLocalFormID(), a_ref->sourceFiles.array->front()->GetFilename(), frm->GetLocalFormID(), frm->sourceFiles.array->front()->GetFilename());
+                            logger::info("(INIT)(CRE): {:X}:{} -> {:X}:{}", a_ref->GetLocalFormID(), a_ref->sourceFiles.array->front()->GetFilename(), frm->GetLocalFormID(), frm->sourceFiles.array->front()->GetFilename());
 #endif
-                        auto* ext = RE::BSExtraData::Create<RE::ExtraEmittanceSource>();
-                        ext->source = frm;
-                        a_ref->extraList.Add(ext);
+                            auto* ext = RE::BSExtraData::Create<RE::ExtraEmittanceSource>();
+                            ext->source = frm;
+                            a_ref->extraList.Add(ext);
+                        }
                     }
                 }
             }
