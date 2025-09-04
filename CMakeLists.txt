@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.20)
 set(NAME "XEMIUtil" CACHE STRING "")
 set(VERSION 0.1.0 CACHE STRING "")
-set(VR_VERSION 1)
 set(AE_VERSION 1)
+set(SE_VERSION 1)
+set(VR_VERSION 1)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
 # ---- Options ----
-option(BUILD_SKYRIMVR "Build for Skyrim VR" OFF)
 option(BUILD_SKYRIMAE "Build for Skyrim AE" OFF)
+option(BUILD_SKYRIMVR "Build for Skyrim VR" OFF)
 
 # ---- Cache build vars ----
 
@@ -28,16 +29,18 @@ if(BUILD_SKYRIMAE)
 	set(VCPKG_MANIFEST_FEATURES "ae")
 elseif(BUILD_SKYRIMVR)
 	add_compile_definitions(SKYRIM_VR)
+	add_compile_definitions(SKYRIMVR)
 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+	set(VCPKG_MANIFEST_FEATURES "vr")
 	set(CommonLibName "CommonLibVR")
 	set(SkyrimVersion "Skyrim VR")
 	set(VERSION ${VERSION}.${VR_VERSION})
-	set(VCPKG_MANIFEST_FEATURES "vr")
 else()
 	add_compile_definitions(SKYRIM_SE)
 	set(VCPKG_MANIFEST_FEATURES "sse")
 	set(CommonLibName "CommonLibSSE")
 	set(SkyrimVersion "Skyrim SSE")
+	set(VERSION ${VERSION}.${SE_VERSION})
 endif()
 
 
@@ -162,4 +165,3 @@ if (MSVC)
 			"$<$<CONFIG:RELEASE>:/INCREMENTAL:NO;/OPT:REF;/OPT:ICF;/DEBUG:FULL>"
 	)
 endif ()
-

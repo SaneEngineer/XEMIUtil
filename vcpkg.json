@@ -3,10 +3,7 @@
   "version-string": "1",
   "dependencies": [
     {
-      "name": "reflectcpp",
-      "features": [
-        "toml"
-      ]
+      "name": "reflectcpp"
     }
   ],
   "features": {
