@@ -14,10 +14,10 @@ namespace MPL::Hooks
                 {
                     auto* std = MPL::Config::StatData::GetSingleton();
                     std->LoadConfig();
-                    auto itm = std::find_if(std->entries.begin(), std->entries.end(), [&](auto ent) {
+                    auto itm = std::find_if(std->entries.rbegin(), std->entries.rend(), [&](auto ent) {
                         return ent.forms.contains(a_ref->GetFormID());
                     });
-                    if (itm != std->entries.end() && itm->xemi != 0x0)
+                    if (itm != std->entries.rend() && itm->xemi != 0x0 && !(a_ref->sourceFiles.array->back()->GetFilename().starts_with("WSU") || a_ref->sourceFiles.array->back()->GetFilename() == "Synthesis.esp"))
                     {
                         if (a_ref->extraList.HasType<RE::ExtraEmittanceSource>())
                         {
