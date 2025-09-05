@@ -9,17 +9,19 @@ namespace MPL::Config
     class StatData : public REX::Singleton<StatData>
     {
     private:
+        std::mutex load_lock;
         bool config_loaded = false;
         const static inline std::string config_path = "Data/SKSE/XEMIUtil";
 
     public:
         inline void LoadConfig()
         {
+            std::lock_guard _guard(this->load_lock);
             if (!this->config_loaded)
             {
+                this->config_loaded = true;
                 if (std::filesystem::exists(this->config_path))
                 {
-                    this->config_loaded = true;
                     for (auto file : std::filesystem::directory_iterator(this->config_path))
                     {
                         if (file.path().extension() == ".json")
@@ -37,7 +39,6 @@ namespace MPL::Config
                     logger::info("Loaded {} Entries", this->entries.size());
                 }
                 else {
-                    this->config_loaded = true;
                     logger::error("Config path does not exist, skipping the loading of records.");
                 }
             }
