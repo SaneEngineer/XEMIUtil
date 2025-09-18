@@ -103,6 +103,8 @@ source_group(
 		${CMAKE_CURRENT_BINARY_DIR}
 )
 
+find_path(MERGEMAPPER_INCLUDE_DIRS "MergeMapperPluginAPI.h")
+
 # ---- Create DLL ----
 
 add_library(
@@ -110,6 +112,7 @@ add_library(
 	SHARED
 	${headers}
 	${sources}
+	${MERGEMAPPER_INCLUDE_DIRS}/MergeMapperPluginAPI.cpp
 )
 
 target_compile_features(
@@ -123,6 +126,7 @@ target_include_directories(
 	PRIVATE
 		${CMAKE_CURRENT_BINARY_DIR}/include
 		${CMAKE_CURRENT_SOURCE_DIR}/include
+		${MERGEMAPPER_INCLUDE_DIRS}
 )
 
 find_package(${CommonLibName} CONFIG REQUIRED)

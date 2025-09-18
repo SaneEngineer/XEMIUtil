@@ -1,4 +1,5 @@
 #pragma once
+#include <MergeMapperPluginAPI.h>
 namespace MPL::Config
 {
     struct ConfigEntry
@@ -31,14 +32,16 @@ namespace MPL::Config
                             {
                                 this->entries.insert(this->entries.end(), cfg->begin(), cfg->end());
                             }
-                            else {
+                            else
+                            {
                                 logger::error("Error {}, skipping", cfg.error().what());
                             }
                         }
                     }
                     logger::info("Loaded {} Entries", this->entries.size());
                 }
-                else {
+                else
+                {
                     logger::error("Config path does not exist, skipping the loading of records.");
                 }
             }
@@ -49,6 +52,7 @@ namespace MPL::Config
 
 namespace rfl
 {
+    static bool tried_mmi = false;
     template <>
     struct Reflector<RE::FormID>
     {
@@ -56,7 +60,21 @@ namespace rfl
         static ReflType from(const RE::FormID& v)
         {
             auto frm = RE::TESForm::LookupByID(v);
-            return std::format("{:06X}:{}", frm->GetLocalFormID(), frm->sourceFiles.array->front()->GetFilename());
+            std::pair<const char*, uint32_t> ofid;
+            if (!tried_mmi && !g_mergeMapperInterface)
+            {
+                MergeMapperPluginAPI::GetMergeMapperInterface001();
+                tried_mmi = true;
+            }
+            if (g_mergeMapperInterface != nullptr && g_mergeMapperInterface->isMerge(frm->sourceFiles.array->front()->GetFilename().data()))
+            {
+                ofid = g_mergeMapperInterface->GetOriginalFormID(frm->sourceFiles.array->front()->GetFilename().data(), frm->GetLocalFormID());
+            }
+            else
+            {
+                ofid = std::make_pair(frm->sourceFiles.array->front()->GetFilename().data(), frm->GetLocalFormID());
+            }
+            return std::format("{:06X}:{}", ofid.second, ofid.second);
         }
         static RE::FormID to(const ReflType& v)
         {
@@ -65,16 +83,29 @@ namespace rfl
             {
                 auto lfid = strtoul(v.substr(0, loc).c_str(), nullptr, 16);
                 auto file = v.substr(loc + 1);
+                if (!tried_mmi && !g_mergeMapperInterface)
+                {
+                    MergeMapperPluginAPI::GetMergeMapperInterface001();
+                    tried_mmi = true;
+                }
+                if (g_mergeMapperInterface != nullptr && g_mergeMapperInterface->wasMerged(file.c_str()))
+                {
+                    auto nd = g_mergeMapperInterface->GetNewFormID(file.c_str(), lfid);
+                    file = std::string(nd.first);
+                    lfid = nd.second;
+                }
                 auto dh = RE::TESDataHandler::GetSingleton();
                 return dh->LookupFormID(lfid, file);
             }
-            else {
+            else
+            {
                 auto frm = RE::TESForm::LookupByEditorID(v);
                 if (frm)
                 {
                     return frm->GetFormID();
                 }
-                else {
+                else
+                {
                     return RE::FormID(0);
                 }
             }
