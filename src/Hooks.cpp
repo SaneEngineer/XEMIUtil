@@ -14,15 +14,24 @@ namespace MPL::Hooks
                 {
                     auto* std = MPL::Config::StatData::GetSingleton();
                     std->LoadConfig();
-                    auto itm = std::find_if(std->entries.rbegin(), std->entries.rend(), [&](auto ent) {
-                        return ent.forms.contains(a_ref->GetFormID());
-                    });
-                    if (itm != std->entries.rend() && itm->xemi != 0x0 && !(a_ref->sourceFiles.array->back()->GetFilename().starts_with("WSU") || a_ref->sourceFiles.array->back()->GetFilename() == "Synthesis.esp"))
+
+                    MPL::Config::ConfigEntry* entry = nullptr;
+                    for (auto& ent : std->entries | std::views::reverse)
+                    {
+                        auto itm = std::ranges::find(ent.forms, a_ref->GetFormID());
+                        if(itm != ent.forms.end())
+                        {
+                            entry = &ent;
+                            break;
+						}
+					}
+
+                    if (entry != nullptr && entry->xemi != 0x0 && !(a_ref->sourceFiles.array->back()->GetFilename().starts_with("WSU") || a_ref->sourceFiles.array->back()->GetFilename() == "Synthesis.esp"))
                     {
                         if (a_ref->extraList.HasType<RE::ExtraEmittanceSource>())
                         {
                             auto* edr = a_ref->extraList.GetByType<RE::ExtraEmittanceSource>();
-                            auto* frm = RE::TESForm::LookupByID(itm->xemi);
+                            auto* frm = RE::TESForm::LookupByID(entry->xemi);
 #ifdef DEBUG
                             logger::info("(INIT)(REP): {:X}:{} -> {:X}:{} W/ {:X}:{}", a_ref->GetLocalFormID(), a_ref->sourceFiles.array->front()->GetFilename(), edr->source->GetLocalFormID(), edr->source->sourceFiles.array->front()->GetFilename(), frm->GetLocalFormID(), frm->sourceFiles.array->front()->GetFilename());
 #endif
@@ -30,7 +39,7 @@ namespace MPL::Hooks
                         }
                         else
                         {
-                            auto* frm = RE::TESForm::LookupByID(itm->xemi);
+                            auto* frm = RE::TESForm::LookupByID(entry->xemi);
 #ifdef DEBUG
                             logger::info("(INIT)(CRE): {:X}:{} -> {:X}:{}", a_ref->GetLocalFormID(), a_ref->sourceFiles.array->front()->GetFilename(), frm->GetLocalFormID(), frm->sourceFiles.array->front()->GetFilename());
 #endif
